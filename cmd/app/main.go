@@ -2,16 +2,21 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/cedrata/go-rest/pkg/middleware"
 )
+
+func LogMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("start log")
+		h.ServeHTTP(w, r)
+		log.Println("end log")
+	})
+}
 
 type testHandler struct{}
 
@@ -19,6 +24,7 @@ func (testHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("hello"))
+	log.Println("inside test handler")
 	time.Sleep(7 * time.Second)
 }
 
@@ -26,7 +32,7 @@ func main() {
 	log.Println("server starting")
 
 	mux := http.NewServeMux()
-	mux.Handle("/test", &testHandler{})
+	mux.Handle("/test", LogMiddleware(&testHandler{})) // &testHandler{})
 
 	srv := &http.Server{
 		Addr:    ":8000",
@@ -54,6 +60,4 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("server shutdown failed:%+v", err)
 	}
-
-	middleware.LogMiddleware()
 }
