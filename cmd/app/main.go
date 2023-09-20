@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/cedrata/go-rest/pkg/middleware"
 )
 
 type testHandler struct{}
@@ -52,5 +55,5 @@ func main() {
 		log.Fatalf("server shutdown failed:%+v", err)
 	}
 
-	log.Print("server exited properly")
+	middleware.LogMiddleware()
 }
