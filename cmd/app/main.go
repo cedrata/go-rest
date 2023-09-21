@@ -10,14 +10,6 @@ import (
 	"time"
 )
 
-func LogMiddleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("start log")
-		h.ServeHTTP(w, r)
-		log.Println("end log")
-	})
-}
-
 type testHandler struct{}
 
 func (testHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -25,14 +17,14 @@ func (testHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("hello"))
 	log.Println("inside test handler")
-	time.Sleep(7 * time.Second)
+	// time.Sleep(7 * time.Second)
 }
 
 func main() {
 	log.Println("server starting")
 
 	mux := http.NewServeMux()
-	mux.Handle("/test", LogMiddleware(&testHandler{})) // &testHandler{})
+	mux.Handle("/test", &testHandler{})// middleware.LogMiddleware(&testHandler{})) // &testHandler{})
 
 	srv := &http.Server{
 		Addr:    ":8000",

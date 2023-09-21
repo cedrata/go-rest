@@ -1,16 +1,43 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 )
 
-type Middleware func(http.HandlerFunc) http.HandlerFunc
+type Chain func(http.Handler) http.Handler
 
-func BuilChain(f http.HandlerFunc, m ...Middleware) http.HandlerFunc {
-	if len(m) == 0 {
-		return f
+func ChainMiddleware(h http.Handler, c []Chain) http.Handler{
+	var res http.Handler
+	if len(c) == 0 {
+		res = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		})
+
+		return res
 	}
-	return m[0](BuilChain(f, m[1:cap(m)]...))
+	
+	for i := len(c); i >= 0; i-- {
+		res = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		})
+	}
+
+	return res
 }
 
+func LogMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("start log")
+		h.ServeHTTP(w, r)
+		log.Println("end log")
+	})
+}
 
+func HelloMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("start hello")
+		h.ServeHTTP(w, r)
+		log.Println("end log")
+	})
+}
