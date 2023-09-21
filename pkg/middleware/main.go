@@ -5,25 +5,26 @@ import (
 	"net/http"
 )
 
-type Chain func(http.Handler) http.Handler
+type ChainItem func(http.Handler) http.Handler
 
-func ChainMiddleware(h http.Handler, c []Chain) http.Handler{
-	var res http.Handler
-	if len(c) == 0 {
-		res = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, r)
-		})
+type Chain struct {
+	items []ChainItem
+}
 
-		return res
-	}
-	
-	for i := len(c); i >= 0; i-- {
-		res = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, r)
-		})
+func NewChain(items ...ChainItem) Chain {
+	return Chain{append([]ChainItem(nil), items...)}
+}
+
+func (c Chain) Handle(h http.Handler) http.Handler {
+	if h == nil {
+	    	h = http.DefaultServeMux
 	}
 
-	return res
+	for i := range c.items {
+		h = c.items[len(c.items)-1-i](h)
+	}
+
+	return h
 }
 
 func LogMiddleware(h http.Handler) http.Handler {

@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/cedrata/go-rest/pkg/middleware"
 )
 
 type testHandler struct{}
@@ -24,7 +26,10 @@ func main() {
 	log.Println("server starting")
 
 	mux := http.NewServeMux()
-	mux.Handle("/test", &testHandler{})// middleware.LogMiddleware(&testHandler{})) // &testHandler{})
+
+	chain := middleware.NewChain(middleware.HelloMiddleware)
+
+	mux.Handle("/test", chain.Handle(&testHandler{})) // middleware.LogMiddleware(&testHandler{})) // &testHandler{})
 
 	srv := &http.Server{
 		Addr:    ":8000",
