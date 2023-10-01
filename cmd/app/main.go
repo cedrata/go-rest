@@ -27,7 +27,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	chain := middleware.NewChain(middleware.HelloMiddleware)
+	chain := middleware.NewChain(middleware.LogMiddleware, middleware.HelloMiddleware)
 
 	mux.Handle("/test", chain.Handle(&testHandler{})) // middleware.LogMiddleware(&testHandler{})) // &testHandler{})
 
