@@ -1,3 +1,2 @@
 package router
 
-func hello()

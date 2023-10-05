@@ -12,9 +12,17 @@ import (
 type ContextKey string
 type ContextValue string
 
-const TraceIdKey ContextKey = "ReqId"
-const UndefinedValue ContextValue = "undefined"
-const InvalidTraceId ContextValue = "invalid trace id value in context"
+type ChainItem func(http.Handler) http.Handler
+
+type Chain struct {
+	items []ChainItem
+}
+
+const (
+	TraceIdKey     ContextKey   = "ReqId"
+	UndefinedValue ContextValue = "undefined"
+	InvalidTraceId ContextValue = "invalid trace id value in context"
+)
 
 // Set a trace id in the given context.
 func SetTraceId(value string, ctx context.Context) context.Context {
@@ -22,7 +30,7 @@ func SetTraceId(value string, ctx context.Context) context.Context {
 }
 
 // Access to the trace id given key with type safety.
-// If the variable is not defined or an error comes up retriving it 
+// If the variable is not defined or an error comes up retriving it
 // an according value is returned.
 func GetTraceId(ctx context.Context) ContextValue {
 	value := ctx.Value(TraceIdKey)
@@ -39,17 +47,10 @@ func GetTraceId(ctx context.Context) ContextValue {
 	return traceId
 }
 
-type ChainItem func(http.Handler) http.Handler
-
-type Chain struct {
-	items []ChainItem
-}
-
+// Create a new middleware chain with the given middleware functions.
 func NewChain(items ...ChainItem) Chain {
 	return Chain{append([]ChainItem(nil), items...)}
 }
-
-// in function to create new chain automatically add log handler as first one.
 
 func (c Chain) Handle(h http.Handler) http.Handler {
 	if h == nil {
@@ -61,6 +62,13 @@ func (c Chain) Handle(h http.Handler) http.Handler {
 	}
 
 	return h
+}
+
+func TraceMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), TraceIdKey, uuid.New().String())
+		h.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func LogMiddleware(h http.Handler) http.Handler {

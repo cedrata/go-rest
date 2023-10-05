@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -13,9 +12,12 @@ type args struct {
 }
 
 func TestSetTraceId(t *testing.T) {
-    ctx := context.Background()
+	ctx := context.Background()
 
-    SetTraceId(uuid.NewString(), ctx)
+    traceId := uuid.NewString()
+    ctx = SetTraceId(traceId, ctx)
 
-    fmt.Println(ctx.Value(TraceIdKey))
+    if res := ctx.Value(TraceIdKey); res != traceId {
+        t.Fatalf("wrong traceId value\nprovided:%s\t returned:%s", traceId, res)
+    }
 }
