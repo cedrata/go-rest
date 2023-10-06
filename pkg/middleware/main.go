@@ -2,15 +2,13 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"reflect"
 
 	"github.com/google/uuid"
 )
-
-type ContextKey string
-type ContextValue string
 
 type ChainItem func(http.Handler) http.Handler
 
@@ -19,32 +17,39 @@ type Chain struct {
 }
 
 const (
-	TraceIdKey     ContextKey   = "ReqId"
-	UndefinedValue ContextValue = "undefined"
-	InvalidTraceId ContextValue = "invalid trace id value in context"
+	TraceIdKey     string = "ReqId"
+	UndefinedValue string = "undefined value"
+	InvalidTraceId string = "invalid trace id value in context"
 )
 
 // Set a trace id in the given context.
-func SetTraceId(value string, ctx context.Context) context.Context {
-	return context.WithValue(ctx, TraceIdKey, value)
+// If the provided traceId is not a valid uuid the same context
+// is returned with some error.
+func SetTraceId(value string, ctx context.Context) (context.Context, error) {
+	_, err := uuid.Parse(value)
+	if err != nil {
+		return ctx, err
+	}
+	return context.WithValue(ctx, TraceIdKey, value), nil
 }
 
 // Access to the trace id given key with type safety.
 // If the variable is not defined or an error comes up retriving it
 // an according value is returned.
-func GetTraceId(ctx context.Context) ContextValue {
+func GetTraceId(ctx context.Context) (string, error) {
 	value := ctx.Value(TraceIdKey)
 
 	if value == nil {
-		return UndefinedValue
+		return "", errors.New(UndefinedValue)
 	}
-	traceId, ok := value.(ContextValue)
+
+	traceId, ok := value.(string)
 
 	if !ok {
-		return InvalidTraceId
+		return "", errors.New(InvalidTraceId)
 	}
 
-	return traceId
+	return traceId, nil
 }
 
 // Create a new middleware chain with the given middleware functions.
