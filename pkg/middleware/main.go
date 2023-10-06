@@ -76,21 +76,21 @@ func TraceMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-func LogMiddleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("start log")
-		ctx := context.WithValue(r.Context(), TraceIdKey, uuid.New().String())
-		log.Println("generated ", reflect.TypeOf(ctx.Value(TraceIdKey)))
-		h.ServeHTTP(w, r.WithContext(ctx))
-		log.Println("end log")
-	})
-}
+// func LogMiddleware(h http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		log.Println("start log")
+// 		ctx := context.WithValue(r.Context(), TraceIdKey, uuid.New().String())
+// 		log.Println("generated ", reflect.TypeOf(ctx.Value(TraceIdKey)))
+// 		h.ServeHTTP(w, r.WithContext(ctx))
+// 		log.Println("end log")
+// 	})
+// }
 
-func HelloMiddleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("start hello")
-		log.Println(r.Context().Value(TraceIdKey))
-		h.ServeHTTP(w, r)
-		log.Println("end log")
-	})
-}
+// func HelloMiddleware(h http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		log.Println("start hello")
+// 		log.Println(r.Context().Value(TraceIdKey))
+// h.ServeHTTP(w, r)
+// 		log.Println("end log")
+// 	})
+// }
