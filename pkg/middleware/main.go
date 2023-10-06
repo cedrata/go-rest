@@ -3,9 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
-	"reflect"
 
 	"github.com/google/uuid"
 )
