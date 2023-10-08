@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 
@@ -10,8 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type args struct {
-	context.Context
+type traceIdMiddlewareHandler struct{}
+
+func (traceIdMiddlewareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	traceId := r.Context().Value(TraceIdKey)
+	w.Write([]byte(traceId.(string)))
 }
 
 func TestSetTraceId(t *testing.T) {
@@ -97,4 +102,17 @@ func TestNewChain(t *testing.T) {
 	expected = reflect.ValueOf(first)
 	actual = reflect.ValueOf(chain.items[0])
 	assert.Equal(t, expected.Pointer(), actual.Pointer())
+}
+
+func TestTraceMiddleware(t *testing.T) {
+	server := httptest.NewServer(TraceMiddleware(traceIdMiddlewareHandler{}))
+
+	res, err := http.Get(server.URL)
+	assert.Nil(t, err)
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	_, err = uuid.Parse(string(body))
+	assert.Nil(t, err)
 }
